@@ -4,6 +4,7 @@ import { SyncManager } from "./sync";
 import { PersistenceType, Store, StoreConfig, SyncMode } from "./types";
 
 export class SynkroneStore<T extends Record<string, any>> implements Store<T> {
+  private initialState: T;
   private state: T;
   private listeners = new Set<(state: T) => void>();
   private propertyListeners = new Map<keyof T, Set<(value: any) => void>>();
@@ -14,8 +15,11 @@ export class SynkroneStore<T extends Record<string, any>> implements Store<T> {
   public actions: Record<string, (...args: any[]) => void | Promise<void>> = {};
 
   constructor(config: StoreConfig<T>) {
+    this.initialState = structuredClone(config.state);
     this.key = config.name;
-    this.persistence = new PersistenceManager<T>(config.persist ?? PersistenceType.NONE);
+    this.persistence = new PersistenceManager<T>(
+      config.persist ?? PersistenceType.NONE
+    );
     this.sync = new SyncManager<T>(this.key, config.sync ?? SyncMode.NONE);
     this.history = config.history?.enabled
       ? new HistoryManager<T>(
@@ -61,7 +65,6 @@ export class SynkroneStore<T extends Record<string, any>> implements Store<T> {
     }
 
     this.subscribe = this.subscribe.bind(this);
-
   }
 
   private async loadPersistedState() {
@@ -74,11 +77,11 @@ export class SynkroneStore<T extends Record<string, any>> implements Store<T> {
 
   get = <K extends keyof T>(key?: K): K extends undefined ? T : T[K] => {
     if (key) return this.state[key];
-    return this.state as any; 
+    return this.state as any;
   };
 
   set(newState: Partial<T>): void {
-    this.state = { ...this.state, ...newState }; 
+    this.state = { ...this.state, ...newState };
     this.notify();
     Object.keys(newState).forEach((key) => {
       const value = newState[key as keyof T];
@@ -89,7 +92,6 @@ export class SynkroneStore<T extends Record<string, any>> implements Store<T> {
     this.persistence.saveState(this.key, this.state);
     this.sync.broadcast(this.state);
   }
-  
 
   replace(newState: T): void {
     Object.assign(this.state, structuredClone(newState));
@@ -123,8 +125,10 @@ export class SynkroneStore<T extends Record<string, any>> implements Store<T> {
   }
 
   reset(): void {
-    Object.assign(this.state, structuredClone(this.state));
+    this.state = { ...this.state, ...this.initialState };
     this.notify();
+    this.persistence.saveState(this.key, this.state);
+    this.sync.broadcast(this.state);
   }
 
   enableSync(): void {
