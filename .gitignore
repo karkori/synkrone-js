@@ -1,0 +1,4 @@
+node_modules/\ndist/\nbun.lock
+
+node_modules
+dist
