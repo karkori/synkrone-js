@@ -1,4 +1,4 @@
-export type PersistenceType = "localStorage" | "sessionStorage" | "indexedDB" | "none";
+import { PersistenceType } from "./types";
 
 export class PersistenceManager<T extends object> {
   private storageType: PersistenceType;
