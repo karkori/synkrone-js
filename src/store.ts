@@ -1,6 +1,6 @@
 import { HistoryManager } from "./history";
 import { PersistenceManager } from "./persistence";
-import { SyncManager } from "./sync";
+import { SyncManager } from "./sync-manager";
 import { PersistenceType, Store, StoreConfig, SyncMode } from "./types";
 
 export class SynkroneStore<T extends Record<string, any>> implements Store<T> {
@@ -20,7 +20,7 @@ export class SynkroneStore<T extends Record<string, any>> implements Store<T> {
     this.persistence = new PersistenceManager<T>(
       config.persist ?? PersistenceType.NONE
     );
-    this.sync = new SyncManager<T>(this.key, config.sync ?? SyncMode.NONE);
+    this.sync = new SyncManager<T>(this.key, config.sync ?? SyncMode.NONE, this);
     this.history = config.history?.enabled
       ? new HistoryManager<T>(
           structuredClone(config.state),
@@ -40,13 +40,9 @@ export class SynkroneStore<T extends Record<string, any>> implements Store<T> {
     });
 
     this.loadPersistedState();
-    this.sync.listen((newState) => {
-      Object.assign(this.state, newState);
-      this.notify();
-    });
 
-    window.addEventListener("synkrone:update", (event: any) => {
-      Object.assign(this.state, event.detail);
+    this.sync.listen((newState: T) => {
+      Object.assign(this.state, newState);
       this.notify();
     });
 
@@ -132,15 +128,15 @@ export class SynkroneStore<T extends Record<string, any>> implements Store<T> {
   }
 
   enableSync(): void {
-    this.sync = new SyncManager<T>(this.key, SyncMode.ALL);
+    this.sync = new SyncManager<T>(this.key, SyncMode.ALL, this);
   }
 
   disableSync(): void {
-    this.sync = new SyncManager<T>(this.key, SyncMode.NONE);
+    this.sync = new SyncManager<T>(this.key, SyncMode.NONE, this);
   }
 
   destroy(): void {
-    window.removeEventListener("synkrone:update", this.notify);
+    this.sync.close();
     this.listeners.clear();
     this.propertyListeners.clear();
   }

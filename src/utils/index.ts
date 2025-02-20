@@ -1,2 +1,2 @@
-export * from "./deepClone";
 export * from "./serialize";
+export * from "./deepclone";
