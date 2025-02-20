@@ -20,7 +20,11 @@ export class SynkroneStore<T extends Record<string, any>> implements Store<T> {
     this.persistence = new PersistenceManager<T>(
       config.persist ?? PersistenceMode.NONE
     );
-    this.sync = new SyncManager<T>(this.key, config.sync ?? SyncMode.NONE, this);
+    this.sync = new SyncManager<T>(
+      this.key,
+      config.sync ?? SyncMode.NONE,
+      this
+    );
     this.history = config.history?.enabled
       ? new HistoryManager<T>(
           structuredClone(config.state),
@@ -40,11 +44,6 @@ export class SynkroneStore<T extends Record<string, any>> implements Store<T> {
     });
 
     this.loadPersistedState();
-
-    this.sync.listen((newState: T) => {
-      Object.assign(this.state, newState);
-      this.notify();
-    });
 
     if (config.actions) {
       this.actions = Object.keys(config.actions).reduce(
@@ -121,11 +120,10 @@ export class SynkroneStore<T extends Record<string, any>> implements Store<T> {
   }
 
   enableSync(): void {
-    this.sync = new SyncManager<T>(this.key, SyncMode.ALL, this);
+    this.sync.setMode(SyncMode.BROADCAST);
   }
-
   disableSync(): void {
-    this.sync = new SyncManager<T>(this.key, SyncMode.NONE, this);
+    this.sync.setMode(SyncMode.NONE);
   }
 
   destroy(): void {
