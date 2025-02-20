@@ -15,7 +15,6 @@ export function useStore<T extends Record<string, any>, R=T>(
     state,
     getState: (key) => (key ? store.get(key) : store.get()),
     set: store.set,
-    replace: store.replace,
     actions: store.actions,
     subscribe: store.subscribe,
     onChange: store.onChange,

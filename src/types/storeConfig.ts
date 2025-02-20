@@ -1,13 +1,13 @@
 import { Middleware } from "./middleware";
 import { Store } from "./store";
 import { SyncMode } from "./syncMode";
-import { PersistenceType } from "./persistenceType";
+import { PersistenceMode } from "./persistenceMode";
 
 export interface StoreConfig<T extends Record<string, any>> {
   name: string;
   state: T;
 
-  persist?: PersistenceType;
+  persist?: PersistenceMode;
   sync?: SyncMode;
 
   history?: {

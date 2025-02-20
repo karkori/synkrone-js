@@ -1,10 +1,10 @@
-import { PersistenceType } from "./types";
+import { PersistenceMode } from "./types";
 
 export class PersistenceManager<T extends object> {
-  private storageType: PersistenceType;
+  private storageType: PersistenceMode;
   private dbName = "synkroneDB";
 
-  constructor(storageType: PersistenceType) {
+  constructor(storageType: PersistenceMode) {
     this.storageType = storageType;
   }
 
